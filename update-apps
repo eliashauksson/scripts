@@ -4,6 +4,7 @@ import requests
 import wget
 from bs4 import BeautifulSoup
 
+
 def update_cura():
     print('--> Update Cura')
     print('- Searching for new Cura update')
@@ -13,39 +14,44 @@ def update_cura():
     cura_soup = BeautifulSoup(cura_request.content, 'html.parser')
 
     latest_release_div = cura_soup.find_all('div', class_='release-entry')[0]
-    latest_release_header = latest_release_div.find_all('div', class_='release-header')
     latest_release = latest_release_div.find_all('a')[1].text.strip()
 
     print(f'- The latest Cura release is {latest_release}')
 
     try:
-        current_file = [file for file in os.listdir('/home/elias/app') # path where cura appimage is installed
+        current_file = [file for file in os.listdir('/home/elias/app')
                         if 'Cura' in file][0]
         print(f'- The installed file is {current_file}')
-    except:
+    except IndexError:
         print('- You dont have Cura installed')
 
-
-    replace_input = input('- Do you wish to replace the current Cura with the latest one? [y/n] ').lower()
+    replace_input = input('- Do you wish to replace the current Cura with the \
+                           latest one? [y/n] ').lower()
 
     while replace_input not in ['y', 'n']:
-        replace_input = input('- Do you wish to replace the current Cura with the latest one? [y/n] ').lower()
+        replace_input = input('- Do you wish to replace the current Cura with \
+                               the latest one? [y/n] ').lower()
 
     if replace_input == 'y':
         try:
-            os.remove(f'/home/elias/app/{current_file}') # path where current cura appimage is installed
+            os.remove(f'/home/elias/app/{current_file}')
             print('- Remove old Cura AppImage')
-        except:
+        except FileNotFoundError:
             pass
 
         print('- Downloading the latest Cura AppImage')
 
         assets = latest_release_div.find_all('details')[-1]
         asset_links = [link['href'] for link in assets.find_all('a')]
-        
-        appimage_link = f'https://github.com{[link for link in asset_links if link.split(".")[-1] == "AppImage"][0]}'
-        wget.download(appimage_link, f'/home/elias/app/Cura-{latest_release}.AppImage') # path where cura appimage is to be installed
-        os.chmod(f'/home/elias/app/Cura-{latest_release}.AppImage', 0o775) # same path as above
+
+        link_part = [link for link in asset_links
+                     if link.split(".")[-1] == 'AppImage'][0]
+
+        appimage_link = f'https://github.com{link_part}'
+        wget.download(appimage_link,
+                      f'/home/elias/app/Cura-{latest_release}.AppImage')
+        os.chmod(f'/home/elias/app/Cura-{latest_release}.AppImage', 0o775)
+
 
 if __name__ == '__main__':
-        update_cura()
+    update_cura()
