@@ -1,8 +1,8 @@
 #!/bin/bash
 
-backup_files="/home"
+backup_files="/home" # files to backup
 
-dest="/media/elias/2BF1-71B2"
+dest="/media/elias/2BF1-71B2" # backup destination
 
 if [ ! -d $dest ]; then
 	echo "Error: Backupdrive is not mounted!"
@@ -12,7 +12,7 @@ else
 
 	date=$(date +"%d-%m-%Y")
 	hostname=$(hostname -s)
-	archive_file="test-$hostname-$date.tgz"
+	archive_file="$hostname-$date.tgz"
 
 	echo "Backing up $backup_files to $dest/$archive_file"
 	date
