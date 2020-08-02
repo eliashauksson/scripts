@@ -23,14 +23,15 @@ def update_cura():
                         if 'Cura' in file][0]
         print(f'- The installed file is {current_file}')
     except IndexError:
+        current_file = None
         print('- You dont have Cura installed')
 
     replace_input = input('- Do you wish to replace the current Cura with the \
-                           latest one? [y/n] ').lower()
+latest one? [y/n] ').lower()
 
     while replace_input not in ['y', 'n']:
         replace_input = input('- Do you wish to replace the current Cura with \
-                               the latest one? [y/n] ').lower()
+the latest one? [y/n] ').lower()
 
     if replace_input == 'y':
         try:
@@ -53,5 +54,56 @@ def update_cura():
         os.chmod(f'/home/elias/app/Cura-{latest_release}.AppImage', 0o775)
 
 
+def update_sabaki():
+    print('--> Update Sabaki')
+    print('- Searching for new Sabaki update')
+
+    sabaki_url = 'https://github.com/SabakiHQ/Sabaki/releases'
+    sabaki_request = requests.get(sabaki_url)
+    sabaki_soup = BeautifulSoup(sabaki_request.content, 'html.parser')
+
+    latest_release_div = sabaki_soup.find_all('div', class_='release-entry')[0]
+    latest_release = latest_release_div.find_all('a')[1].text.strip()
+
+    print(f'- The latest Sabaki release is {latest_release}')
+
+    try:
+        current_file = [file for file in os.listdir('/home/elias/app')
+                        if 'sabaki' in file][0]
+        print(f'- The installed file is {current_file}')
+    except IndexError:
+        current_file = None
+        print('- You dont have Sabaki installed')
+
+    replace_input = input('- Do you wish to replace the current Sabaki with the \
+latest one? [y/n] ').lower()
+
+    while replace_input not in ['y', 'n']:
+        replace_input = input('- Dow you wish to replace the current Sabaki with the \
+the latest one? [y/n] ').lower()
+
+    if replace_input == 'y':
+        try:
+            os.remove(f'/home/elias/app/{current_file}')
+            print('- Remove old Sabaki AppImage')
+        except FileNotFoundError:
+            pass
+
+        print('- Downloading the latest Sabaki AppImage')
+
+        assets = latest_release_div.find_all('details')[-1]
+        asset_links = [link['href'] for link in assets.find_all('a')]
+
+        link_part = [link for link in asset_links
+                     if 'AppImage' in link.split('.') and
+                        'x64' in link.replace('-', '.').split('.')][0]
+
+        appimage_link = f'https://github.com{link_part}'
+        wget.download(appimage_link,
+                      f'/home/elias/app/sabaki-{latest_release}.AppImage')
+        os.chmod(f'/home/elias/app/sabaki-{latest_release}.AppImage', 0o775)
+
+
 if __name__ == '__main__':
     update_cura()
+    update_sabaki()
