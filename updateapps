@@ -1,0 +1,64 @@
+#!/home/elias/Development/anaconda3/bin/python
+import os
+import re
+import requests
+import wget
+from logzero import logger
+from bs4 import BeautifulSoup
+
+
+def update_cura():
+    url = 'https://github.com/Ultimaker/Cura'
+    name = 'Cura'
+
+    logger.info(f'--> {name}')
+    latest_tag = get_latest_tag(url)
+    logger.info(f'latest tag: {latest_tag}')
+    installed_tag, filename = get_installed_tag(name)
+    logger.info(f'installed tag: {installed_tag}')
+
+    if latest_tag != installed_tag:
+        download_new_tag(url, name, filename, latest_tag)
+    else:
+        logger.info(f'not upgrading {name}')
+
+
+def get_latest_tag(url):
+    r = requests.get(f'{url}/tags')
+    soup = BeautifulSoup(r.content, 'html.parser')
+    tag_divs = soup.find_all('div', class_='Box-row')
+    latest_tag = tag_divs[0].find('a').text.strip()
+    return latest_tag
+
+
+def get_installed_tag(name):
+    try:
+        f = [f for f in os.listdir('/home/elias/Applications') if name in f][0]
+    except IndexError:
+        return None, None
+
+    n = re.findall(r'\d+', f)
+    return f'{n[0]}.{n[1]}.{n[2]}', f
+
+
+def download_new_tag(url, name, filename, latest_tag):
+    logger.info(f'upgrading {name}...')
+
+    if filename is not None:
+        os.remove(f'/home/elias/Applications/{filename}')
+
+    r = requests.get(f'{url}/releases/tag/{latest_tag}')
+    soup = BeautifulSoup(r.content, 'html.parser')
+    assets = soup.find_all('div', class_='Box')[1]
+    asset_links = [link['href'] for link in assets.find_all('a')]
+    download_link_suffix = [link for link in asset_links
+                            if link.split('.')[-1] == 'AppImage'][0]
+    download_link = f'https://github.com{download_link_suffix}'
+
+    wget.download(download_link,
+                  f'/home/elias/Applications/{name}-{latest_tag}.AppImage')
+    os.chmod(f'/home/elias/Applications/{name}-{latest_tag}.AppImage', 0o775)
+
+
+if __name__ == '__main__':
+    update_cura()
