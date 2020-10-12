@@ -1,0 +1,37 @@
+#!/home/elias/Development/anaconda3/bin/python
+import os
+import shutil
+from datetime import date
+from logzero import logger
+
+back = ['/home/elias/.config',
+        '/home/elias/Documents',
+        '/home/elias/Pictures',
+        '/home/elias/Development/autoscripts',
+        '/home/elias/Development/repositories']
+dest = '/media/elias/2BF1-71B2'
+
+
+def backup():
+    if not os.path.isdir(dest):
+        logger.warning('Backupdrive not mounted!')
+        exit()
+
+    logger.info('Starting backup script...')
+
+    d = date.today().strftime('%d-%m-%Y')
+    h = os.uname()[1]
+    backup_name = f'{h}_{d}'
+
+    logger.info('Creating backup...')
+
+    os.mkdir(f'{dest}/{backup_name}')
+    for b in back:
+        logger.info(f'backing up {b}')
+        shutil.copytree(b, f"{dest}/{backup_name}/{b.split('/')[-1]}")
+
+    logger.info('Backup Created.')
+
+
+if __name__ == '__main__':
+    backup()
