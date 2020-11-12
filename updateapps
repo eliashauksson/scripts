@@ -37,8 +37,10 @@ def get_installed_tag(name):
     except IndexError:
         return None, None
 
-    n = re.findall(r'\d+', f)
-    return f'{n[0]}.{n[1]}.{n[2]}', f
+    n = f.split('Cura-', 1)[1].split('.')
+    version = f'{n[0]}.{n[1]}'
+
+    return version, f
 
 
 def download_new_tag(url, name, filename, latest_tag):
@@ -51,8 +53,9 @@ def download_new_tag(url, name, filename, latest_tag):
     soup = BeautifulSoup(r.content, 'html.parser')
     assets = soup.find_all('div', class_='Box')[1]
     asset_links = [link['href'] for link in assets.find_all('a')]
-    download_link_suffix = [link for link in asset_links
-                            if link.split('.')[-1] == 'AppImage'][0]
+    download_link_suffix = [
+        link for link in asset_links if link.split('.')[-1] == 'AppImage'
+    ][0]
     download_link = f'https://github.com{download_link_suffix}'
 
     wget.download(download_link,
